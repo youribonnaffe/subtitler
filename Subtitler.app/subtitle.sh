@@ -26,16 +26,8 @@ function isMovieMatchingNameSeasonEpisode {
     return 1   
 }
 
-OLD_IFS=$IFS
-IFS=$'\n'
-
-# MAIN
-
-movieFile=$*
-folder=$(dirname $movieFile)
-echo $movieFile >> ~/subtitle.log
-for srtFile in $(find $folder -maxdepth 1 -name "*.srt")
-do
+function tryMatching {
+    srtFile=$1
     IFS=$OLD_IFS
     
     extractNameFromSrtFile $(basename $srtFile)
@@ -47,7 +39,35 @@ do
     
     if isMovieMatchingNameSeasonEpisode $movieFile $name $season $episode
         then
-            newSrtFile=$(echo $movieFile | sed "s/.avi/.srt/")
+            newSrtFile=$(echo $movieFile | sed "s/.$extension/.srt/")
             mv "$srtFile" "$newSrtFile"
+            exit
     fi
+}
+
+OLD_IFS=$IFS
+IFS=$'\n'
+# MAIN
+
+movieFile=$*
+extension=${movieFile#*.}
+folder=$(dirname $movieFile)
+echo $movieFile $extension >> ~/subtitle.log
+
+# normal usage, srt and movie in same folder
+for srtFile in $(find $folder -maxdepth 1 -name "*.srt")
+do
+    tryMatching $srtFile
+done
+
+# srt in sub folder
+for srtFile in $(find $folder -maxdepth 2 -name "*.srt")
+do
+    tryMatching $srtFile
+done
+
+# srt in parent folder
+for srtFile in $(find $folder/.. -maxdepth 2 -name "*.srt")
+do
+    tryMatching $srtFile
 done

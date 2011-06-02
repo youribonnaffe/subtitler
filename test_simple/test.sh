@@ -4,7 +4,7 @@
 srtBefore=$(echo *.srt)
 
 #test
-../subtitle.sh "*.avi"
+../Subtitler.app/subtitle.sh "*.avi"
 
 expectedSrtFile=$(echo *.avi| sed "s/.avi/.srt/")
 test -f "$expectedSrtFile"
